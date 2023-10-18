@@ -2,65 +2,73 @@ provider "aws" {
   region = var.location
 }
 
-resource "aws_instance" "demo-server" {
+resource "aws_instance" "server" {
  ami = var.os_name
  key_name = var.key 
  instance_type  = var.instance-type
  associate_public_ip_address = true
-subnet_id = aws_subnet.demo_subnet.id
-vpc_security_group_ids = [aws_security_group.demo-vpc-sg.id]
+subnet_id = aws_subnet.subnet.id
+vpc_security_group_ids = [aws_security_group.vpc-sg.id]
 }
 
 // Create VPC
-resource "aws_vpc" "demo-vpc" {
+resource "aws_vpc" "vpc" {
   cidr_block = var.vpc-cidr
 }
 
 // Create Subnet
-resource "aws_subnet" "demo_subnet" {
-  vpc_id     = aws_vpc.demo-vpc.id 
+resource "aws_subnet" "subnet-1" {
+  vpc_id     = aws_vpc.vpc.id 
   cidr_block = var.subnet1-cidr
   availability_zone = var.subent_az
 
   tags = {
-    Name = "demo_subnet"
+    Name = "subnet-1"
   }
 }
-
-// Create Internet Gateway
-
-resource "aws_internet_gateway" "demo-igw" {
-  vpc_id = aws_vpc.demo-vpc.id
+resource "aws_subnet" "subnet-2" {
+  vpc_id     = aws_vpc.vpc.id 
+  cidr_block = var.subnet1-cidr
+  availability_zone = var.subent_az
 
   tags = {
-    Name = "demo-igw"
+    Name = "subnet-2"
+  }
+}
+// Create Internet Gateway
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = {
+    Name = "gw"
   }
 }
 
-resource "aws_route_table" "demo-rt" {
-  vpc_id = aws_vpc.demo-vpc.id
+resource "aws_route_table" "rt" {
+  vpc_id = aws_vpc.vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.demo-igw.id
+    gateway_id = aws_internet_gateway.igw.id
   }
   tags = {
-    Name = "demo-rt"
+    Name = "rt"
   }
 }
 
 // associate subnet with route table 
-resource "aws_route_table_association" "demo-rt_association" {
-  subnet_id      = aws_subnet.demo_subnet.id 
+resource "aws_route_table_association" "rt_association" {
+  subnet_id      = aws_subnet._subnet.id 
 
-  route_table_id = aws_route_table.demo-rt.id
+  route_table_id = aws_route_table.rt.id
 }
 // create a security group 
 
-resource "aws_security_group" "demo-vpc-sg" {
-  name        = "demo-vpc-sg"
+resource "aws_security_group" "vpc-sg" {
+  name        = "vpc-sg"
  
-  vpc_id      = aws_vpc.demo-vpc.id
+  vpc_id      = aws_vpc.vpc.id
 
   ingress {
 
